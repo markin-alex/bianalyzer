@@ -180,8 +180,8 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150,
     max_tr = calculated_page_rank[keywords[0]]
     for keyword in keywords:
         keywords_with_tr.append((keyword, (calculated_page_rank[keyword] / max_tr) * 100.0))
-    for keyword, rank in keywords_with_tr:
-        print '%s\t%s' % (keyword, rank)
+    for i, (keyword, rank) in enumerate(keywords_with_tr):
+        print '%s. %s\t%s' % ((i + 1), keyword, rank)
 
     # limit the number of keywords for further processing
     keywords = keywords[0:keyword_limit]
@@ -215,3 +215,11 @@ def get_keyword_list(texts, window_size=5, keyword_limit=150,
     print keywords
 
     return keywords
+
+
+def write_keywords_to_file(path, keywords):
+    output_file = open(path, 'w+')
+    for keyword in keywords:
+        output_file.write(keyword + '\n')
+
+    output_file.close()
