@@ -7,9 +7,9 @@ from .relevance_metrics import tf_idf, bm25, keyword_frequency
 
 
 class RelevanceMatrix:
-    def __init__(self, keywords, bianalyzer_texts, matrix, max_score):
+    def __init__(self, keywords, texts, matrix, max_score):
         self.keywords = keywords
-        self.texts = bianalyzer_texts
+        self.texts = texts
         self.matrix = matrix
         self.max_relevance_score = max_score
 
