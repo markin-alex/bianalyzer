@@ -44,7 +44,7 @@ class KeywordGraphGUI():
         # With weighted=0.0-1.0, indicates nodes whose centrality > the given threshold.
         # This requires some extra calculations.
         self.g.draw(weighted=0.5, directed=True)
-        self.g.update(iterations=10)
+        # self.g.update(iterations=10)
 
         dx = self.canvas.mouse.x - self.translate_x  # Undo translate()
         dy = self.canvas.mouse.y - self.translate_y
@@ -127,12 +127,13 @@ class KeywordGraphGUI():
                 self.ctrl_pressed = False
                 self.first_node = None
 
-    def start(self, distance=30, force=0.01, repulsion_radius=30):
+    def start(self, iterations=50, distance=30, force=0.01, repulsion_radius=30):
         """Starts the GUI
         """
         self.g.distance = distance   # Overall spacing between nodes.
         self.g.layout.force = force  # Strength of the attractive & repulsive force.
         self.g.layout.repulsion = repulsion_radius   # Repulsion radius.
+        self.g.update(iterations=iterations)
         self.canvas.on_key_press = self.on_key_press
         self.canvas.on_key_release = self.on_key_release
         self.canvas.draw = self.draw
@@ -140,7 +141,7 @@ class KeywordGraphGUI():
 
 
 def draw_keyword_biclusters(keyword_biclusters):
-    graph = KeywordGraphGUI('Keyword biclusters graph')
+    graph = KeywordGraphGUI('Keyphrase biclusters graph')
     kw_edges = create_edges(keyword_biclusters)
     for (kw1, kw2), (num, data1, data2) in kw_edges.iteritems():
         graph.add_edge(kw1, kw2, (data1, data2), weight=3.1 - 3.0 / num, stroke=Color(0, 0, 0, 0.3))
@@ -187,7 +188,7 @@ if __name__ == '__main__':
     gui = KeywordGraphGUI('Biclustering graph')
     keywords = ['cluster analysis', 'principal component analysis']
     edges = [('cluster analysis', 'principal component analysis',
-              (['hey1', 'hey2', 'social network visualization'], ['hey1', 'hey2', 'real_val']))]
+              (['1', '2', 'social network visualization'], ['1', '2', 'real_val']))]
     for edge in edges:
         gui.add_edge(edge[0], edge[1], edge[2])
 
