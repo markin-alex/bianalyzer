@@ -173,6 +173,10 @@ def create_edges(keyword_biclusters, bicluster_num=50):
                 max_row_density = row_density
                 max_row = kw
 
+        if max_column == max_row:
+            print 'self-link for %s' % max_row  # TODO: note printing here and below
+            continue
+
         print '%s -> %s' % (max_column, max_row)
         kw_edge = (max_column, max_row)
         if kw_edge in kw_edges:
