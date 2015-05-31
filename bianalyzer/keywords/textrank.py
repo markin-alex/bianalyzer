@@ -116,8 +116,8 @@ def join_keywords(text_list, page_rank, keywords, concatenation_occurrences):
     return final_keywords
 
 
-def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150,
-                                  concatenate=True, concatenation_occurrences=2, lemmatize_words=True):
+def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequency_filter=True, min_freq=0.2,
+                                  max_freq=15.0, concatenate=True,  concatenation_occurrences=2, lemmatize_words=True):
     check_text_collection(texts)
     word_set = set()
     # stemmed_words = {}
@@ -193,7 +193,8 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150,
 
     # keywords = [stemmed_words[keyword] for keyword in keywords]  # TODO: note stemming!
 
-    keywords = filter_by_frequency(raw_texts, keywords)  # TODO: note frequency filtering!
+    if frequency_filter:
+        keywords = filter_by_frequency(raw_texts, keywords, min_freq, max_freq)  # TODO: note frequency filtering!
 
     if not concatenate:
         return keywords
