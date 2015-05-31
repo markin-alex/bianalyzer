@@ -94,3 +94,35 @@ def calculate_column_density(column_index, matrix):
     density = float(column_sum) / n
 
     return density
+
+
+def construct_similarity_matrix_via_profiles(keywords, relevance_profiles):
+    keyword_similarity_matrix = []
+    total_sum = 0.0
+    for row, keyword1 in enumerate(keywords):
+        keyword_similarity_matrix.append([])
+        row_sum = 0
+        for col, keyword2 in enumerate(keywords):
+            similarity = 0.0
+            if len(relevance_profiles[row]) > 0:
+                similarity = float(len(relevance_profiles[row].intersection(relevance_profiles[col])))
+                similarity /= len(relevance_profiles[row])
+                if col != row:
+                    row_sum += similarity
+                    total_sum += similarity
+            keyword_similarity_matrix[row].append(similarity)
+
+        # print "keyword '%s' - row sum: %s; mean: %s" % (keyword1, row_sum, row_sum / len(relevant_keywords))
+        keyword_similarity_matrix[row][row] = row_sum / len(keywords)
+        total_sum += keyword_similarity_matrix[row][row]
+
+    # for row in keyword_similarity_matrix:
+    #     s = ''
+    #     for val in row:
+    #         s += '%5s' % round(val, 2)
+    #     print s
+
+    total_average = total_sum / (len(keywords) * len(keywords))
+    print 'average value in the matrix: %s' % total_average
+
+    return keyword_similarity_matrix
