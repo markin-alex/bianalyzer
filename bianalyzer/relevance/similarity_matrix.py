@@ -27,7 +27,7 @@ def construct_similarity_matrix(relevance_matrix, relevance_threshold=0.2):
     relevant_keywords = []
     for (i, keyword) in enumerate(keywords):
         keyword_row = relevance_matrix.matrix[i]
-        relevance_profile = set([val for val in keyword_row if val >= real_threshold])
+        relevance_profile = set([i for i, val in enumerate(keyword_row) if val >= real_threshold])
         if len(relevance_profile) > 0:
             print 'keyword: %s, relevance profile size: %s' % (keyword, len(relevance_profile))
             relevant_keywords.append(keyword)
