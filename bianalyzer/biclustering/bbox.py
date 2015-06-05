@@ -33,10 +33,6 @@ class BBox(AbstractBiclustering):
                 if final_bicluster is not None:
                     for bicluster in previous_biclusters:
                         self.intermediate_biclusters[bicluster] = (final_bicluster, saved_num)
-                    print 'row #%s, finishing, processed: %s biclusters; saved: %s' % \
-                          (initial_row, len(previous_biclusters), saved_num)
-                    self.total_iterations += len(previous_biclusters) + saved_num
-                    self.saved_operations += saved_num
                     return final_bicluster
                 previous_biclusters.append(current_bicluster)
             # -------------------------------------
@@ -98,16 +94,8 @@ class BBox(AbstractBiclustering):
                 else:
                     row_set.add(max_row)
 
-            real_density = self._calculate_box_cluster_density(row_set, column_set)
-            real_g_value = real_density * real_density * len(row_set) * len(column_set)
-            if real_density - box_density > 0.00001 or real_g_value - g_value > 0.00001:
-                print 'OH NO!!!'
-                print 'density diff: %s' % (real_density - box_density)
-                print 'g-value diff: %s' % (real_g_value - g_value)
-                raise Exception('G_VALUE TROUBLE')
-
         final_bicluster = Bicluster(row_set, column_set, box_density)
-        print 'row #%s, finished, processed: %s biclusters' % (initial_row, len(previous_biclusters))
+        # print 'row #%s, finished, processed: %s biclusters' % (initial_row, len(previous_biclusters))
         if memoization:
             prev_num = len(previous_biclusters)
             self.total_iterations += prev_num

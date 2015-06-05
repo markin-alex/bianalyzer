@@ -3,16 +3,14 @@ import traceback
 import urllib2
 from urllib import urlencode
 from datetime import datetime
-from enum import Enum
 import lxml
 from lxml.etree import XMLSyntaxError
 import re
 
-
-class DLKeywordTypes(Enum):
-    controlled = 0
-    thesaurus = 1
-    both = 2
+from .article import Article
+from ..errors import InvalidArgumentError
+from ..helpers import remove_html_tags, construct_similarity_matrix_via_profiles
+from ..relevance import RelevanceMatrix, SimilarityMatrix
 
 
 def download_ieee_abstracts(raw_query, number, start_index=1):
@@ -24,37 +22,103 @@ def download_ieee_abstracts(raw_query, number, start_index=1):
     return query_ieee(query_string)
 
 
-def download_ieee_keywords(articles):
-    start_time = datetime.now()
-    article_keywords = {}
-    for i, article in enumerate(articles):
-        doi = article.doi
-        params = {'doi': doi, 'ctype': 'Journals', 'hc': 1}
-        query_string = urlencode(params)
-        documents = query_ieee(query_string)
-        if documents is None or len(documents) < 1:
-            print 'Error on article with doi = %s' % doi
-        else:
-            document = documents[0]
-            controlled_keywords = find_keyphrases(document, 'controlledterms')
-            thesaurus_keywords = find_keyphrases(document, 'thesaurusterms')
-            keywords = controlled_keywords.union(thesaurus_keywords)
-            for keyword in keywords:
-                if keyword in controlled_keywords and keyword in thesaurus_keywords:
-                    term_type = DLKeywordTypes.both
-                else:
-                    term_type = DLKeywordTypes.controlled if keyword in controlled_keywords \
-                        else DLKeywordTypes.thesaurus
-                k_articles = article_keywords.get(keyword, [])
-                k_articles.append((article.article_id, term_type))
-                article_keywords[keyword] = k_articles
+class DLTermType:
+    controlled = 0
+    thesaurus = 1
+    author = 2
+    ieee = 3
 
-        print 'Processed article #%s: \"%s\"' % (i, article.title)
-        print '-----------------------------------------'
 
-    end_time = datetime.now()
-    print 'seconds elapsed: %s' % (end_time-start_time).total_seconds()
-    return article_keywords
+class IEEEKeywordDownloader:
+    def __init__(self, articles, term_type, debug=False):
+        if len(articles) <= 0:
+            raise InvalidArgumentError('articles', articles, 'The list could not be empty')
+        for article in articles:
+            if not isinstance(article, Article):
+                raise InvalidArgumentError('articles', articles,
+                                           'The list should contain only bianalyzer.abstracts.article.Article class instances')
+        self.articles = articles
+        self.debug = debug  # TODO: consider debug mode
+        self._successful_articles = []
+        self.term_type = term_type
+        self._downloaded = False
+        self._keyword_articles = {}
+
+    def download_ieee_keywords(self):
+        if self._downloaded:
+            return self._keyword_articles.keys()
+
+        term_type = self.term_type
+        keyword_articles = {}
+        successful_articles = []
+
+        i = 0
+        for line, article in enumerate(self.articles):
+            doi = article.doi
+            keywords = None
+            try:
+                if term_type in (DLTermType.controlled, DLTermType.thesaurus):
+                    keywords = retrieve_ieee_inspec_keywords(doi, term_type)
+                elif term_type in (DLTermType.author, DLTermType.ieee):
+                    keywords = retrieve_ieee_web_keywords(doi, term_type)
+            except Exception, e:
+                print 'Error occurred: %s' % e
+
+            if keywords is not None and len(keywords) > 0:
+                successful_articles.append(article)
+                for keyword in keywords:
+                    k_articles = keyword_articles.get(keyword, [])
+                    k_articles.append(i)
+                    keyword_articles[keyword] = k_articles
+                i += 1
+
+            # print 'Processed article #%s: \"%s\"' % (line + 1, article.title)
+            # print '-----------------------------------------'
+
+        self._keyword_articles = keyword_articles
+        self._downloaded = True
+        self._successful_articles = successful_articles
+        return keyword_articles.keys()
+
+    def get_binary_relevance_matrix(self):
+        if not self._downloaded:
+            self.download_ieee_keywords()
+        matrix = []
+        keywords = []
+        for i, (keyword, article_indices) in enumerate(self._keyword_articles.iteritems()):
+            matrix.append([])
+            for _ in range(len(self._successful_articles)):
+                matrix[i].append(0.0)
+            for index in article_indices:
+                matrix[i][index] = 1.0
+            keywords.append(keyword)
+        return RelevanceMatrix(keywords, self._successful_articles, matrix, 1.0)
+
+    def get_similarity_matrix(self):
+        if not self._downloaded:
+            self.download_ieee_keywords()
+        keywords = self._keyword_articles.keys()
+        profiles = [set(self._keyword_articles[k]) for k in keywords]
+        matrix = construct_similarity_matrix_via_profiles(keywords, profiles)
+        return SimilarityMatrix(keywords, matrix)
+
+
+def retrieve_ieee_inspec_keywords(article_doi, term_type):
+    params = {'doi': article_doi, 'ctype': 'Journals', 'hc': 1}
+    query_string = urlencode(params)
+    documents = query_ieee(query_string)
+    if documents is None or len(documents) < 1:
+        print 'Error on document with doi = %s' % article_doi
+    else:
+        document = documents[0]
+        keywords = None
+        if term_type == DLTermType.controlled:
+            keywords = find_keyphrases(document, 'controlledterms')
+        elif term_type == DLTermType.thesaurus:
+            keywords = find_keyphrases(document, 'thesaurusterms')
+        return keywords
+
+    return None
 
 
 def find_keyphrases(document, title):
@@ -72,6 +136,39 @@ def find_keyphrases(document, title):
             keyphrases.add(term)
 
     return keyphrases
+
+
+term_types_headers = {DLTermType.author: 'AUTHOR KEYWORDS', DLTermType.ieee: 'IEEE TERMS'}
+
+
+def retrieve_ieee_web_keywords(article_doi, term_type):
+    query_url = 'http://dx.doi.org/' + article_doi
+    request = urllib2.Request(query_url)
+    response = urllib2.urlopen(request)
+    if response.url.startswith('http://ieeexplore.ieee.org:80/xpl/articleDetails.jsp'):
+        keywords_url = response.url.replace('articleDetails', 'abstractKeywords')
+        kw_request = urllib2.Request(keywords_url)
+        kw_response = urllib2.urlopen(kw_request)
+        full_html = kw_response.read()
+        kw_header = term_types_headers[term_type]
+        match = re.search('<div class=\"section\">\s*<h2>' + kw_header + '</h2>(.*?)</div>', full_html,
+                          re.MULTILINE + re.DOTALL)
+        keywords = set()
+        if match is not None:
+            keywords_html = match.groups()[0]
+            kw_lines = re.findall('<li>(.*?)</li>', keywords_html)
+            for kw_line in kw_lines:
+                keyword = remove_html_tags(kw_line).strip().lower()
+                new_keywords = [kw.strip() for kw in re.split('[,;.]', keyword)
+                                if re.match('^[\sa-zA-Z\'-]{2,}$', kw) is not None]
+                keywords.update(new_keywords)
+        else:
+            print 'No author keywords (doi: %s)' % article_doi
+        return keywords
+    else:
+        print 'Unrecognized url: %s; for doi %s' % (response.url, article_doi)
+
+    return None
 
 
 def query_ieee(query_string):
@@ -101,7 +198,6 @@ def query_ieee(query_string):
     except Exception:
         # TODO: log it
         print traceback.format_exc()
-
 
 if __name__ == '__main__':
     first = datetime.now()

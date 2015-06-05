@@ -37,21 +37,12 @@ class AbstractBiclustering:  # Not for instantiation!
         biclusters = set()
 
         self.intermediate_biclusters = {}  # for memoization
-        self.total_iterations = 0
-        self.saved_operations = 0
 
         for row_ind in range(len(self.matrix)):
             new_bicluster = self.find_bicluster(row_ind, initial_threshold)
-            if new_bicluster in biclusters:
+            if new_bicluster in biclusters or new_bicluster.density <= 0:
                 continue
             biclusters.add(new_bicluster)
-
-        if len(self.intermediate_biclusters) > 0:  # for debugging purposes
-            print 'number of collisions: %s; number of entities: %s' \
-                  % (count_collisions(self.intermediate_biclusters), len(self.intermediate_biclusters))
-            print 'total iterations: %s; saved_iterations: %s, portion: %s' % \
-                  (self.total_iterations, self.saved_operations,
-                   round(float(self.saved_operations) / self.total_iterations, 3))
 
         return biclusters
 

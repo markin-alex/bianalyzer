@@ -4,7 +4,7 @@ from math import log
 from ..texts import porter_stemmer
 
 
-def tf_idf(collection_length, collection_occurrences, article_statistics, keyword):
+def tf_idf(keyword, collection_length, collection_occurrences, article_statistics):
     # Let's assume that stemming is done by default
     keyword = keyword.lower()
     if collection_occurrences == 0:
@@ -15,14 +15,14 @@ def tf_idf(collection_length, collection_occurrences, article_statistics, keywor
     if text_length == 0:
         return 0
 
-    tf = float(word_freq) / float(text_length)
+    tf = float(word_freq)
     idf = calculate_idf(collection_length, collection_occurrences)
     tfidf = tf * idf
     return tfidf
 
 
-def bm25(collection_length, collection_occurrences, average_document_length, article_statistics, keyword,
-         k1=1.5, b=0.75):
+def bm25(keyword, collection_length, collection_occurrences,
+         average_document_length, article_statistics, k1=1.5, b=0.75):
     keyword = keyword.lower()
     if collection_occurrences == 0:
         return 0

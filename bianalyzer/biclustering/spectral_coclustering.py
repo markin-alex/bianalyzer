@@ -7,7 +7,7 @@ from .biclustering import AbstractBiclustering, Bicluster
 class SpectralGraphCoclustering(AbstractBiclustering):
     __type__ = 'coclustering'
 
-    def find_disjoint_biclusters(self, biclusters_number=5):
+    def find_disjoint_biclusters(self, biclusters_number=50):
         data = np.asarray_chkfinite(self.matrix)
         data[data == 0] = 0.000001
         coclustering = SpectralCoclustering(n_clusters=biclusters_number, random_state=0)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-def get_matrix_scatter(matrix):
+def get_matrix_squared_sum(matrix):
     squared_sum = 0.0
     for row in matrix:
         for val in row:

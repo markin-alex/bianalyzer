@@ -34,7 +34,7 @@ class KeywordGraphGUI():
         self.edges_data[(n1, n2)] = data
         self.g.add_edge(n1, n2, stroke=stroke, strokewidth=strokewidth, *args, **kwargs)
 
-    def draw(self):
+    def _draw(self):
         canvas.clear()
         background(1)
         translate(self.translate_x, self.translate_y)
@@ -44,7 +44,7 @@ class KeywordGraphGUI():
         # With weighted=0.0-1.0, indicates nodes whose centrality > the given threshold.
         # This requires some extra calculations.
         self.g.draw(weighted=0.5, directed=True)
-        self.g.update(iterations=10)
+        # self.g.update(iterations=10)
 
         dx = self.canvas.mouse.x - self.translate_x  # Undo translate()
         dy = self.canvas.mouse.y - self.translate_y
@@ -91,14 +91,14 @@ class KeywordGraphGUI():
                         data = self.edges_data[edge][1]
 
                     push()
-                    self.draw_node_data(hovering_node, data)
+                    self._draw_node_data(hovering_node, data)
                     pop()
 
         if self.selected_node is not None:
             self.selected_node.x = dx
             self.selected_node.y = dy
 
-    def draw_node_data(self, node, data):
+    def _draw_node_data(self, node, data):
         lines = [Text(t, width=300, fontname="Droid Sans Mono") for t in data if len(t) < 30]
         if len(lines) <= 0:
             return
@@ -116,38 +116,38 @@ class KeywordGraphGUI():
             cur_height += textheight(l) + 5
             l.draw(node.x - 300, node.y - cur_height)
 
-    def on_key_press(self, keys):
+    def _on_key_press(self, keys):
         if keys.pressed and (keys.char is None or keys.char == ''):
             if keys.modifiers is not None and len(keys.modifiers) > 0 and keys.modifiers[0] == 'ctrl':
                 self.ctrl_pressed = True
 
-    def on_key_release(self, keys):
+    def _on_key_release(self, keys):
         if keys.char is None or keys.char == '':
             if keys.modifiers is not None and len(keys.modifiers) > 0 and keys.modifiers[0] == 'ctrl':
                 self.ctrl_pressed = False
                 self.first_node = None
 
-    def start(self, distance=30, force=0.01, repulsion_radius=30):
+    def start(self, iterations=70, distance=30, force=0.01, repulsion_radius=30):
         """Starts the GUI
         """
         self.g.distance = distance   # Overall spacing between nodes.
         self.g.layout.force = force  # Strength of the attractive & repulsive force.
         self.g.layout.repulsion = repulsion_radius   # Repulsion radius.
-        self.canvas.on_key_press = self.on_key_press
-        self.canvas.on_key_release = self.on_key_release
-        self.canvas.draw = self.draw
+        self.g.update(iterations=iterations)
+        self.canvas.on_key_press = self._on_key_press
+        self.canvas.on_key_release = self._on_key_release
+        self.canvas.draw = self._draw
         self.canvas.run()
 
 
-def draw_keyword_biclusters(keyword_biclusters):
-    graph = KeywordGraphGUI('Keyword biclusters graph')
-    kw_edges = create_edges(keyword_biclusters)
-    for (kw1, kw2), (num, data1, data2) in kw_edges.iteritems():
+def draw_keyword_biclusters(edges):
+    graph = KeywordGraphGUI('Keyphrase biclusters graph')
+    for (kw1, kw2), (num, data1, data2, g_val) in edges.iteritems():
         graph.add_edge(kw1, kw2, (data1, data2), weight=3.1 - 3.0 / num, stroke=Color(0, 0, 0, 0.3))
     graph.start()
 
 
-def create_edges(keyword_biclusters, bicluster_num=50):
+def construct_keyword_graph(keyword_biclusters, bicluster_num=50):
     kw_edges = {}
     keyword_biclusters = keyword_biclusters[:bicluster_num]
     for keyword_bicluster in keyword_biclusters:
@@ -172,13 +172,23 @@ def create_edges(keyword_biclusters, bicluster_num=50):
                 max_row_density = row_density
                 max_row = kw
 
+        if max_column == max_row:
+            print 'self-link for %s' % max_row  # TODO: note printing here and below
+            continue
+
         print '%s -> %s' % (max_column, max_row)
         kw_edge = (max_column, max_row)
         if kw_edge in kw_edges:
             val = kw_edges[kw_edge]
-            kw_edges[kw_edge] = (val[0] + 1, val[1], val[2])
+            prev_g_val = val[3]
+            if prev_g_val >= keyword_bicluster.g_value:
+                kw_edges[kw_edge] = (val[0] + 1, val[1], val[2], prev_g_val)
+            else:
+                kw_edges[kw_edge] = (val[0] + 1, keyword_bicluster.keyword_columns, keyword_bicluster.keyword_rows,
+                                     keyword_bicluster.g_value)
         else:
-            kw_edges[kw_edge] = (1, keyword_bicluster.keyword_columns, keyword_bicluster.keyword_rows)
+            kw_edges[kw_edge] = (1, keyword_bicluster.keyword_columns, keyword_bicluster.keyword_rows,
+                                 keyword_bicluster.g_value)
 
     return kw_edges
 
@@ -187,7 +197,7 @@ if __name__ == '__main__':
     gui = KeywordGraphGUI('Biclustering graph')
     keywords = ['cluster analysis', 'principal component analysis']
     edges = [('cluster analysis', 'principal component analysis',
-              (['hey1', 'hey2', 'social network visualization'], ['hey1', 'hey2', 'real_val']))]
+              (['1', '2', 'social network visualization'], ['1', '2', 'real_val']))]
     for edge in edges:
         gui.add_edge(edge[0], edge[1], edge[2])
 

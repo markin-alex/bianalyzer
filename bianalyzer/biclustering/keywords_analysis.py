@@ -13,12 +13,12 @@ class KeywordBicluster:
 
 
 def get_keyword_biclusters(similarity_matrix, biclustering_algorithm,
-                           max_biclusters_number=1000, lambda0=0.0):
+                           biclusters_number=1000, lambda0=0.0):
     # TODO: is filtering based on size needed?
 
     matrix = similarity_matrix.matrix
     keywords = similarity_matrix.keywords
-    biclustering_result = find_biclusters(matrix, biclustering_algorithm, lambda0)
+    biclustering_result = find_biclusters(matrix, biclustering_algorithm, lambda0, biclusters_number)
 
     keyword_biclusters = []
     for bicluster in biclustering_result.biclusters:
@@ -59,3 +59,19 @@ def get_keyword_biclusters(similarity_matrix, biclustering_algorithm,
     # keyword_biclusters = keyword_biclusters[:max_biclusters_number]
     biclustering_result.biclusters = keyword_biclusters
     return biclustering_result
+
+
+def save_keyword_biclusters(biclustering_result, file):
+    file.write('Residuals: %s\n\n' % biclustering_result.residuals_portion)
+    for keyword_bicluster in biclustering_result.biclusters:
+        matrix = keyword_bicluster.similarity_matrix
+        header = '%30s' % ''
+        header += ''.join('%30s' % k for k in keyword_bicluster.keyword_columns)
+        file.write(header + '\n')
+        for i, row in enumerate(matrix):
+            s = '%30s' % keyword_bicluster.keyword_rows[i]
+            s += ''.join('%30s' % val for val in row)
+            file.write(s + '\n')
+        file.write('bicluster density: %s\n' % keyword_bicluster.density)
+        file.write('bicluster g-value: %s\n' % keyword_bicluster.g_value)
+        file.write('------------------------\n\n')

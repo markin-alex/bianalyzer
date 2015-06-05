@@ -8,7 +8,7 @@ class InvalidArgumentError(Exception):
         self.value = value
 
 
-class MissingParameterError(Exception):
+class MissingArgumentError(Exception):
     def __init__(self, name, message=''):
-        super(MissingParameterError, self).__init__('Missing parameter %s; %s' % (name, message))
+        super(MissingArgumentError, self).__init__('Missing parameter %s; %s' % (name, message))
         self.name = name
