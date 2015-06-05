@@ -16,7 +16,7 @@ class KeywordTextBicluster:
 
 
 def get_keyword_text_biclusters(relevance_matrix, biclustering_algorithm,
-                                max_biclusters_number=50, lambda0=0.0):
+                                biclusters_number=50, lambda0=0.0):
     if not issubclass(biclustering_algorithm, AbstractBiclustering):
         raise InvalidArgumentError("biclustering_algorithm", biclustering_algorithm,
                                    "Must be a subclass of AbstractBiclustering")
@@ -24,7 +24,7 @@ def get_keyword_text_biclusters(relevance_matrix, biclustering_algorithm,
     texts = relevance_matrix.texts
     keywords = relevance_matrix.keywords
     matrix = relevance_matrix.matrix
-    biclustering_result = find_biclusters(matrix, biclustering_algorithm, lambda0)
+    biclustering_result = find_biclusters(matrix, biclustering_algorithm, lambda0, biclusters_number)
 
     keyword_text_biclusters = []
     for bicluster in biclustering_result.biclusters:
@@ -63,6 +63,5 @@ def get_keyword_text_biclusters(relevance_matrix, biclustering_algorithm,
         keyword_text_biclusters.append(KeywordTextBicluster(keyword_rows, text_columns, bicluster_matrix,
                                                             round(bicluster.density, 2), round(bicluster.g_value, 2)))
 
-    keyword_text_biclusters = keyword_text_biclusters[:max_biclusters_number]
     biclustering_result.biclusters = keyword_text_biclusters
     return biclustering_result
