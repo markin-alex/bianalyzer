@@ -1,3 +1,5 @@
+# Bianalyzer
+
 ## Description
 
 **Bianalyzer** provides methods for bicluster analysis over unstructured text data.
@@ -15,21 +17,24 @@ These include keyphrases from the Inspec database and author keywords that were 
 ## How to use *Bianalyzer*
 
 Here is the typical scenario of work with **Bianalyzer**:
+
 1. Download a collection of abstracts from a Digital Library (either IEEE Xplore or Springer)
 2. Extract a set of keyphrases from the obtained collection via TextRank algorithm
 3. Build a keyphrase-to-text relevance matrix using either
-    a. TF-IDF metric;
-    b. Okapi BM25 metric;
-    c. Annotated Suffix Tree based metric;
-    d. Raw frequency metric (it simply calculates the number of time the keyphrase appears in a document);
-    e. Normalized frequency metric (number of occurrences divided by a document length excluding stop-words).
+
+    * TF-IDF metric;
+    * Okapi BM25 metric;
+    * Annotated Suffix Tree based metric;
+    * Raw frequency metric (it simply calculates the number of time the keyphrase appears in a document);
+    * Normalized frequency metric (number of occurrences divided by a document length excluding stop-words).
+
 4. Calculate a keyphrase-to-keyphrase similarity matrix given a relevance matrix and a user-defined relevance threshold
 5. Find dense keyphrase biclusters in the similarity matrix
 6. Draw a keyphrase graph based on the found keyphrase biclusters
 
 One can run the use-case above using the following small script:
 
-'''python
+```python
 from bianalyzer.keywords import extract_keywords_via_textrank
 from bianalyzer.abstracts import download_abstracts
 from bianalyzer import BianalyzerText
@@ -43,4 +48,4 @@ relevance_matrix = construct_relevance_matrix(keywords, bianalyzer_texts, Releva
 similarity_matrix = construct_similarity_matrix(relevance_matrix, 0.15)
 keyword_biclusters = get_keyword_biclusters(similarity_matrix, GreedyBBox)
 draw_keyword_biclusters(keyword_biclusters)
-'''
+```
