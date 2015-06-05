@@ -72,8 +72,8 @@ class IEEEKeywordDownloader:
                     keyword_articles[keyword] = k_articles
                 i += 1
 
-            print 'Processed article #%s: \"%s\"' % (line + 1, article.title)
-            print '-----------------------------------------'
+            # print 'Processed article #%s: \"%s\"' % (line + 1, article.title)
+            # print '-----------------------------------------'
 
         self._keyword_articles = keyword_articles
         self._downloaded = True
