@@ -123,6 +123,6 @@ def construct_similarity_matrix_via_profiles(keywords, relevance_profiles):
     #     print s
 
     total_average = total_sum / (len(keywords) * len(keywords))
-    print 'average value in the matrix: %s' % total_average
+    print 'average value in the similarity matrix: %s' % total_average
 
     return keyword_similarity_matrix
