@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import re
+from ..helpers import remove_html_tags
 
 
 class Article:
@@ -12,14 +12,14 @@ class Article:
 
     def _init_from_ieee_xml(self, data):
         abstract_text_raw = data.find('abstract').text
-        self.abstract_text = self._remove_html_tags(abstract_text_raw)
+        self.abstract_text = remove_html_tags(abstract_text_raw)
         self.publication_year = data.find('py').text
         self.doi = data.find('doi').text
         self.title = data.find('title').text
 
     def _init_from_springer_json(self, data):
         abstract_text_raw = data.get('abstract')
-        abstract_text = self._remove_html_tags(abstract_text_raw)
+        abstract_text = remove_html_tags(abstract_text_raw)
         abstract_text = abstract_text.strip()
         if abstract_text.startswith('Abstract'):
             abstract_text = abstract_text[8:]  # removing Abstract word
@@ -35,16 +35,3 @@ class Article:
 
         self.doi = data.get('doi')
         self.title = data.get('title')
-
-    @staticmethod
-    def _remove_html_tags(text, unsafe=True):
-
-        def extract_value(match_obj):
-            return match_obj.group('value')
-
-        tag_pattern = '<(?P<tag>\w+)>(?P<value>.*?)</(?P=tag)>'
-        result = re.sub(tag_pattern, extract_value, text)
-        if unsafe:
-            result = re.sub('<[^>]*>', '', result)
-
-        return result
