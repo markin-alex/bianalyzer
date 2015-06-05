@@ -12,16 +12,16 @@ from nltk.stem import wordnet, PorterStemmer
 from .frequency import get_word_frequencies
 from ..helpers import check_text_collection
 
-pos_list = ['NN', 'NNP']
-artificial_stop_words = ['using', 'furthermore', 'show']
+default_pos_list = ['NN', 'NNP', 'NNS']
+artificial_stop_words = ['using', 'furthermore', 'show', 'present', 'use', 'paper']
 
 
 # apply syntactic filters based on POS tags
-def filter_for_tags(tagged):
-    return [item for item in tagged if item[1] in pos_list and (re.match('^[a-zA-Z\'-]{2,}$', item[0]) is not None)]
+def filter_for_tags(tagged, pos_list):
+    return [item for item in tagged if item[1] in pos_list and (re.match('^[a-zA-Z\'-]{4,}$', item[0]) is not None)]
 
 
-def does_tag_fit(tag):
+def does_tag_fit(tag, pos_list):
     return tag[1] in pos_list
 
 
@@ -57,9 +57,21 @@ def filter_by_frequency(texts, keywords, min_freq=0.2, max_freq=15.0):
         else:
             odd_keywords.append((keyword, freq))
 
-    print odd_keywords
+    print 'filtered over frequency keywords: %s' % ', '.join(item[0] for item in odd_keywords)
     keywords = [k[0] for k in resulting_keywords]
     return keywords
+
+
+def filter_by_stemming(keywords):
+    stems = {}
+    for kw in keywords:
+        kw_stem = porter_stemmer.stem(kw)
+        if kw_stem in stems:
+            if len(kw) < len(stems[kw_stem]):
+                stems[kw_stem] = kw
+        else:
+            stems[kw_stem] = kw
+    return stems.keys(), stems.values()
 
 
 def join_keywords(text_list, page_rank, keywords, concatenation_occurrences):
@@ -117,7 +129,8 @@ def join_keywords(text_list, page_rank, keywords, concatenation_occurrences):
 
 
 def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequency_filter=True, min_freq=0.2,
-                                  max_freq=15.0, concatenate=True,  concatenation_occurrences=2, lemmatize_words=True):
+                                  max_freq=15.0, stemming_filter=True, concatenate=True,  concatenation_occurrences=2,
+                                  lemmatize_words=True, pos_list=default_pos_list):
     check_text_collection(texts)
     word_set = set()
     # stemmed_words = {}
@@ -132,7 +145,7 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequ
             tagged_tokens = [(lemmatize(word), pos) for (word, pos) in tagged_tokens]
         word_list = [x for x in tagged_tokens]
 
-        tagged_tokens = filter_for_tags(tagged_tokens)
+        tagged_tokens = filter_for_tags(tagged_tokens, pos_list)
         tagged_tokens = normalize(tagged_tokens)
 
         raw_words = [x for x in tagged_tokens]
@@ -159,8 +172,8 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequ
         window_start = 0
         tokens = text_list[i]
         while window_start < len(tokens):
-            window = filter_for_tags(tokens[window_start:window_start + window_size + 1])
-            if len(window) > 0 and does_tag_fit(window[0]):
+            window = filter_for_tags(tokens[window_start:window_start + window_size + 1], pos_list)
+            if len(window) > 0 and does_tag_fit(window[0], pos_list):
                 node1 = window[0][0]
                 stemmed_node1 = porter_stemmer.stem(node1)
                 for j in range(1, len(window)):
@@ -180,8 +193,8 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequ
     max_tr = calculated_page_rank[keywords[0]]
     for keyword in keywords:
         keywords_with_tr.append((keyword, (calculated_page_rank[keyword] / max_tr) * 100.0))
-    for i, (keyword, rank) in enumerate(keywords_with_tr):
-        print '%s. %s\t%s' % ((i + 1), keyword, rank)
+    # for i, (keyword, rank) in enumerate(keywords_with_tr):
+    #     print '%s. %s\t%s' % ((i + 1), keyword, rank)
 
     # limit the number of keywords for further processing
     keywords = keywords[0:keyword_limit]
@@ -190,6 +203,9 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequ
     for stop_word in artificial_stop_words:
         if stop_word in keywords:
             keywords.remove(stop_word)
+
+    if stemming_filter:
+        stems, keywords = filter_by_stemming(keywords)
 
     # keywords = [stemmed_words[keyword] for keyword in keywords]  # TODO: note stemming!
 
@@ -203,19 +219,6 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequ
     print final_keywords
 
     return final_keywords
-
-
-def get_keyword_list(texts, window_size=5, keyword_limit=150,
-                     concatenate=True, concatenation_occurrences=2, lemmatize_words=True):
-    start_time = datetime.datetime.now()
-    keywords = extract_keywords_via_textrank(texts, window_size, keyword_limit,
-                                             concatenate, concatenation_occurrences, lemmatize_words)
-    end_time = datetime.datetime.now()
-    print "time elapsed: %s" % (end_time - start_time).total_seconds()
-
-    print keywords
-
-    return keywords
 
 
 def write_keywords_to_file(path, keywords):
