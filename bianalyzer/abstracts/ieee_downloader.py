@@ -198,6 +198,7 @@ def query_ieee(query_string):
     except Exception:
         # TODO: log it
         print traceback.format_exc()
+    return []
 
 if __name__ == '__main__':
     first = datetime.now()
