@@ -12,7 +12,7 @@ def download_springer_abstracts(raw_query, number, springer_api_key, start_index
     query = '("%s" AND type:"Journal")' % raw_query
     params = {'q': query, 'p': number, 's': start_index, 'api_key': springer_api_key}
     query_string = urlencode(params)
-    query_url = 'http://api.springer.com/metadata/json?' + query_string
+    query_url = 'http://api.springer.com/meta/v1/json?' + query_string
 
     request = urllib2.Request(query_url)
     response = urllib2.urlopen(request)

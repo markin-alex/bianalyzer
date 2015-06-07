@@ -7,7 +7,7 @@ from .errors import InvalidArgumentError
 from .texts import BianalyzerText
 
 
-def retriable_n(retry_count=3, time_sleep=0.2, exceptions=(Exception,)):
+def retriable_n(retry_count=3, time_sleep=0.2, call_last=False, exceptions=(Exception,)):
     def retriable_n_deco(func):
         @wraps(func)
         def wrapper(*args, **kw):
@@ -16,12 +16,15 @@ def retriable_n(retry_count=3, time_sleep=0.2, exceptions=(Exception,)):
                     return func(*args, **kw)
                 except Exception, e:
                     if isinstance(e, exceptions):
-                        print ('%s(*%s, **%s) try %i failed, retrying: %s' % (func.__name__, args, kw, i, e))
+                        # print ('%s(*%s, **%s) try %i failed, retrying: %s' % (func.__name__, args, kw, i, e))
                         time.sleep(time_sleep)
                     else:
                         raise
-            else:
+
+            if call_last:
                 return func(*args, **kw)
+            else:
+                return None
         return wrapper
     return retriable_n_deco
 
