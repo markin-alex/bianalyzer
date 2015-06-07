@@ -3,6 +3,7 @@
 from .biclustering import AbstractBiclustering
 from ..errors import InvalidArgumentError
 from .bicluster_analysis import find_biclusters
+from ..helpers import calculate_row_density
 
 
 class KeywordTextBicluster:
@@ -65,3 +66,17 @@ def get_keyword_text_biclusters(relevance_matrix, biclustering_algorithm,
 
     biclustering_result.biclusters = keyword_text_biclusters
     return biclustering_result
+
+
+def save_keyword_text_biclusters(biclustering_result, file):
+    file.write('Residuals: %s\n\n' % biclustering_result.residuals_portion)
+    for keyword_text_bicluster in biclustering_result.biclusters:
+        matrix = keyword_text_bicluster.relevance_matrix
+        header = '%30s\tDensity' % 'Keyword'
+        file.write(header + '\n')
+        for i, row in enumerate(matrix):
+            s = '%30s\t%.2f' % (keyword_text_bicluster.keyword_rows[i], calculate_row_density(i,matrix))
+            file.write(s + '\n')
+        file.write('bicluster density: %.2f\n' % keyword_text_bicluster.density)
+        file.write('bicluster g-value: %.2f\n' % keyword_text_bicluster.g_value)
+        file.write('-------------------------------------------\n\n')

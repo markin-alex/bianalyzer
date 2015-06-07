@@ -72,6 +72,6 @@ def save_keyword_biclusters(biclustering_result, file):
             s = '%30s' % keyword_bicluster.keyword_rows[i]
             s += ''.join('%30s' % val for val in row)
             file.write(s + '\n')
-        file.write('bicluster density: %s\n' % keyword_bicluster.density)
-        file.write('bicluster g-value: %s\n' % keyword_bicluster.g_value)
-        file.write('------------------------\n\n')
+        file.write('bicluster density: %.2f\n' % keyword_bicluster.density)
+        file.write('bicluster g-value: %.2f\n' % keyword_bicluster.g_value)
+        file.write('-------------------------------------------\n\n')
