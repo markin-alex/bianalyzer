@@ -40,13 +40,9 @@ relevance_metrics = (
 )
 
 
-def construct_relevance_matrix(keywords, bianalyzer_texts, relevance_metric, query=False, params=None):
+def construct_relevance_matrix(keywords, bianalyzer_texts, relevance_metric, query=False, **metric_params):
     if relevance_metric not in relevance_metrics:
         raise InvalidArgumentError("relevance_metric", relevance_metric, "Such relevance metric is not supported")
-    if params is not None and not isinstance(params, dict):
-        raise InvalidArgumentError("params", params, "Should be a dictionary!")
-    elif params is None:
-        params = {}
 
     collection_length = len(bianalyzer_texts)
     average_doc_length = calculate_average_text_length(bianalyzer_texts)
@@ -94,7 +90,7 @@ def construct_relevance_matrix(keywords, bianalyzer_texts, relevance_metric, que
                 if query:
                     for k, word in enumerate(kw_words):
                         relevance_score += bm25(word, collection_length, kw_word_occurrences[k], average_doc_length,
-                                                bianalyzer_text)
+                                                bianalyzer_text, **metric_params)
                 else:
                     relevance_score = bm25(keyword, collection_length, kw_occurrences,
                                            average_doc_length, bianalyzer_text)
