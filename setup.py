@@ -2,7 +2,7 @@ import setuptools
 from setuptools.command.install import install
 import sys
 
-nltk_dependencies = ['taggers']
+nltk_dependencies = ['punkt', 'maxent_treebank_pos_tagger', 'wordnet']
 
 
 class InstallWithPostCommand(install):
@@ -39,6 +39,7 @@ setuptools.setup(
         'graphs':  ['nodebox-opengl', 'pyglet'],
         'spectral_coclustering': ['numpy>=1.6.1', 'scipy>=0.9', 'scikit-learn>=0.16.1']
     },
+    cmdclass={'install': InstallWithPostCommand},
 
     entry_points={
         "console_scripts": [
