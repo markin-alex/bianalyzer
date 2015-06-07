@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# -*- coding: utf-8 -*-
 from bisect import bisect_left
 import operator
-import datetime
-import nltk
 import networkx
 import re
 from nltk.stem import wordnet, PorterStemmer
@@ -13,7 +10,7 @@ from .frequency import get_word_frequencies
 from ..helpers import check_text_collection
 
 default_pos_list = ['NN', 'NNP', 'NNS']
-artificial_stop_words = ['using', 'furthermore', 'show', 'present', 'use', 'paper']
+artificial_stop_words = ['using', 'furthermore', 'show', 'present', 'use', 'paper', 'multiple']
 
 
 # apply syntactic filters based on POS tags
@@ -57,7 +54,7 @@ def filter_by_frequency(texts, keywords, min_freq=0.2, max_freq=15.0):
         else:
             odd_keywords.append((keyword, freq))
 
-    print 'filtered over frequency keywords: %s' % ', '.join(item[0] for item in odd_keywords)
+    # print 'filtered over frequency keywords: %s' % ', '.join(item[0] for item in odd_keywords)
     keywords = [k[0] for k in resulting_keywords]
     return keywords
 
@@ -77,7 +74,6 @@ def filter_by_stemming(keywords):
 def join_keywords(text_list, page_rank, keywords, concatenation_occurrences):
     sorted_keywords = sorted(keywords)
 
-    # TODO : stem or lemmatize words? Maybe, create a dict with stemmed keyphrases and filter duplicates
     keyphrases = {}
     marked = {}
     for i in range(len(text_list)):
@@ -154,16 +150,9 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequ
         text_list.append(word_list)
 
         for token in tagged_tokens:
-            # stemmed_token = porter_stemmer.stem(token)
-            # word = stemmed_words.get(stemmed_token)
-            # if word is not None:
-            #     stemmed_words[stemmed_token] = word if len(word) < len(token) else token
-            # else:
-            #     stemmed_words[stemmed_token] = token  # TODO: note stemming!
-
             word_set.add(token)
 
-    print "words in set: %s" % len(word_set)
+    # print "words in set: %s" % len(word_set)
     word_graph = networkx.Graph()
     word_set_list = list(word_set)
     word_graph.add_nodes_from(word_set_list)
@@ -175,11 +164,9 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequ
             window = filter_for_tags(tokens[window_start:window_start + window_size + 1], pos_list)
             if len(window) > 0 and does_tag_fit(window[0], pos_list):
                 node1 = window[0][0]
-                stemmed_node1 = porter_stemmer.stem(node1)
                 for j in range(1, len(window)):
                     node2 = window[j][0]
-                    stemmed_node2 = porter_stemmer.stem(node2)
-                    word_graph.add_edge(node1, node2)  # TODO: note! it is stemmed
+                    word_graph.add_edge(node1, node2)
 
             window_start += 1
 
@@ -198,7 +185,6 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequ
 
     # limit the number of keywords for further processing
     keywords = keywords[0:keyword_limit]
-    # TODO: Check whether improvement with heapify will be helpful
 
     for stop_word in artificial_stop_words:
         if stop_word in keywords:
@@ -207,16 +193,14 @@ def extract_keywords_via_textrank(texts, window_size=5, keyword_limit=150, frequ
     if stemming_filter:
         stems, keywords = filter_by_stemming(keywords)
 
-    # keywords = [stemmed_words[keyword] for keyword in keywords]  # TODO: note stemming!
-
     if frequency_filter:
-        keywords = filter_by_frequency(raw_texts, keywords, min_freq, max_freq)  # TODO: note frequency filtering!
+        keywords = filter_by_frequency(raw_texts, keywords, min_freq, max_freq)
 
     if not concatenate:
         return keywords
 
     final_keywords = join_keywords(text_list, calculated_page_rank, keywords, concatenation_occurrences)
-    print final_keywords
+    print 'extracted keyphrases: %s' % ', '.join(item for item in final_keywords)
 
     return final_keywords
 

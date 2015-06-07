@@ -38,7 +38,7 @@ class IEEEKeywordDownloader:
                 raise InvalidArgumentError('articles', articles,
                                            'The list should contain only bianalyzer.abstracts.article.Article class instances')
         self.articles = articles
-        self.debug = debug  # TODO: consider debug mode
+        self.debug = debug
         self._successful_articles = []
         self.term_type = term_type
         self._downloaded = False
@@ -196,7 +196,6 @@ def query_ieee(query_string):
         return documents
 
     except Exception:
-        # TODO: log it
         print traceback.format_exc()
     return []
 

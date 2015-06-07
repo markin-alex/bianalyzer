@@ -14,35 +14,33 @@ class KeywordBicluster:
 
 def get_keyword_biclusters(similarity_matrix, biclustering_algorithm,
                            biclusters_number=1000, lambda0=0.0):
-    # TODO: is filtering based on size needed?
-
     matrix = similarity_matrix.matrix
     keywords = similarity_matrix.keywords
     biclustering_result = find_biclusters(matrix, biclustering_algorithm, lambda0, biclusters_number)
 
     keyword_biclusters = []
     for bicluster in biclustering_result.biclusters:
-        print '----------------------------'
-        print 'new bicluster'
+        # print '----------------------------'
+        # print 'new bicluster'
 
         keyword_rows = []
         first_set = ''
         for row in bicluster.row_set:
             first_set += '%s, ' % keywords[row]
             keyword_rows.append(keywords[row])
-        print first_set
+        # print first_set
 
         keyword_columns = []
         second_set = ''
         for col in bicluster.column_set:
             second_set += '%s, ' % keywords[col]
             keyword_columns.append(keywords[col])
-        print second_set
+        # print second_set
 
-        print 'density: %s' % bicluster.density
-        print 'row set len: %s' % len(bicluster.row_set)
-        print 'column set len: %s' % len(bicluster.column_set)
-        print 'g-value: %s' % round(bicluster.g_value, 2)
+        # print 'density: %s' % bicluster.density
+        # print 'row set len: %s' % len(bicluster.row_set)
+        # print 'column set len: %s' % len(bicluster.column_set)
+        # print 'g-value: %s' % round(bicluster.g_value, 2)
 
         bicluster_matrix = []
         for (i, row) in enumerate(bicluster.row_set):
@@ -51,7 +49,7 @@ def get_keyword_biclusters(similarity_matrix, biclustering_algorithm,
             for col in bicluster.column_set:
                 s += '%6s' % round(matrix[row][col], 2)
                 bicluster_matrix[i].append(round(matrix[row][col], 2))
-            print s
+            # print s
 
         keyword_biclusters.append(KeywordBicluster(keyword_rows, keyword_columns, bicluster_matrix,
                                                    round(bicluster.density, 2), round(bicluster.g_value, 2)))

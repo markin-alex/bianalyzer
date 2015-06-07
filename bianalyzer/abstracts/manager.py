@@ -49,6 +49,7 @@ def download_abstracts(source, raw_query, number, springer_api_key=None):
                     articles.append(article)
                     left_number -= 1
             except Exception, e:
-                print 'could not process document: %s' % e  # TODO: log it
+                # print 'could not process document: %s' % e
+                pass
 
     return articles

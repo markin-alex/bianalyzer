@@ -180,10 +180,10 @@ def construct_keyword_graph(keyword_biclusters, bicluster_num=0, min_density=0.0
         row_keywords = [keyword_bicluster.keyword_rows[i] for i, _ in rows_densities]
 
         if max_column == max_row:
-            print 'self-link for %s' % max_row  # TODO: note printing here and below
+            # print 'self-link for %s' % max_row
             continue
 
-        print '%s -> %s' % (max_column, max_row)
+        # print '%s -> %s' % (max_column, max_row)
         kw_edge = (max_column, max_row)
         if kw_edge in kw_edges:
             val = kw_edges[kw_edge]
