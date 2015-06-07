@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import sys
 import getopt
-from optparse import OptionParser
 
 from bianalyzer import BianalyzerText
 from bianalyzer.abstracts import download_abstracts
-from bianalyzer.biclustering import get_keyword_biclusters, GreedyBBox, get_keyword_text_biclusters
+from bianalyzer.biclustering import get_keyword_biclusters, GreedyBBox, get_keyword_text_biclusters, \
+    save_keyword_text_biclusters
 from bianalyzer.biclustering.keywords_analysis import save_keyword_biclusters
 from bianalyzer.graphs import construct_keyword_graph, draw_keyword_biclusters
 from bianalyzer.keywords import extract_keywords_via_textrank
@@ -96,7 +96,7 @@ def main():
                 draw_keyword_biclusters(edges)
         else:
             keyword_text_biclusters = get_keyword_text_biclusters(relevance_matrix, GreedyBBox)
-            # save_keyword_text_biclusters(keyword_text_biclusters, biclusters_file)
+            save_keyword_text_biclusters(keyword_text_biclusters, biclusters_file)
 
         biclusters_file.close()
     else:
