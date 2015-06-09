@@ -89,7 +89,7 @@ def main():
         if not opts['-r']:
             similarity_matrix = construct_similarity_matrix(relevance_matrix, 0.2)
             keyword_biclusters = get_keyword_biclusters(similarity_matrix, GreedyBBox)
-            save_keyword_biclusters(keyword_biclusters, biclusters_file)
+            save_keyword_biclusters(keyword_biclusters, biclusters_file, min_density=0.1)
             if opts['-d']:
                 try:
                     from bianalyzer.graphs import construct_keyword_graph, draw_keyword_biclusters
@@ -100,7 +100,7 @@ def main():
                     print 'Could not draw the graph! Please, install the nodebox-opengl package'
         else:
             keyword_text_biclusters = get_keyword_text_biclusters(relevance_matrix, GreedyBBox)
-            save_keyword_text_biclusters(keyword_text_biclusters, biclusters_file)
+            save_keyword_text_biclusters(keyword_text_biclusters, biclusters_file, min_density=0.1)
 
         biclusters_file.close()
     else:

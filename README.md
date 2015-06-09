@@ -21,7 +21,7 @@ Here is a typical scenario of work with the **Bianalyzer** library:
 
 1. Download a collection of abstracts from a Digital Library (either IEEE Xplore or Springer)
 2. Extract a set of keyphrases from the obtained collection via TextRank algorithm
-3. Build a keyphrase-to-text relevance matrix using either
+3. Build a keyphrase-to-text relevance matrix one of the following metrics:
 
     * TF-IDF metric;
     * Okapi BM25 metric;
