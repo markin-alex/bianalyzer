@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import sys
 import getopt
-from optparse import OptionParser
 
 from bianalyzer import BianalyzerText
 from bianalyzer.abstracts import download_abstracts
-from bianalyzer.biclustering import get_keyword_biclusters, GreedyBBox, get_keyword_text_biclusters
+from bianalyzer.biclustering import get_keyword_biclusters, GreedyBBox, get_keyword_text_biclusters, \
+    save_keyword_text_biclusters
 from bianalyzer.biclustering.keywords_analysis import save_keyword_biclusters
-from bianalyzer.graphs import construct_keyword_graph, draw_keyword_biclusters
 from bianalyzer.keywords import extract_keywords_via_textrank
 from bianalyzer.relevance import construct_relevance_matrix, construct_similarity_matrix
 
@@ -40,7 +39,7 @@ def main():
     if opts['-d'] == '':
         opts['-d'] = True
 
-    print opts, args
+    # print opts, args
 
     if opts['-d'] and opts['-r']:
         print_error('Cannot use both options -r and -d simultaneously')
@@ -90,13 +89,18 @@ def main():
         if not opts['-r']:
             similarity_matrix = construct_similarity_matrix(relevance_matrix, 0.2)
             keyword_biclusters = get_keyword_biclusters(similarity_matrix, GreedyBBox)
-            save_keyword_biclusters(keyword_biclusters, biclusters_file)
+            save_keyword_biclusters(keyword_biclusters, biclusters_file, min_density=0.1)
             if opts['-d']:
-                edges = construct_keyword_graph(keyword_biclusters.biclusters)
-                draw_keyword_biclusters(edges)
+                try:
+                    from bianalyzer.graphs import construct_keyword_graph, draw_keyword_biclusters
+                    edges = construct_keyword_graph(keyword_biclusters.biclusters, biclusters_num=100)
+                    draw_keyword_biclusters(edges)
+                except Exception:
+                    print '-------------------------'
+                    print 'Could not draw the graph! Please, install the nodebox-opengl package'
         else:
             keyword_text_biclusters = get_keyword_text_biclusters(relevance_matrix, GreedyBBox)
-            # save_keyword_text_biclusters(keyword_text_biclusters, biclusters_file)
+            save_keyword_text_biclusters(keyword_text_biclusters, biclusters_file, min_density=0.1)
 
         biclusters_file.close()
     else:

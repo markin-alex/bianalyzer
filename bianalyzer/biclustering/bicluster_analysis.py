@@ -37,6 +37,8 @@ def find_biclusters(matrix, biclustering_algorithm, lambda0=0.0, biclusters_numb
     residuals = get_matrix_squared_sum(residuals_matrix)
     matrix_squared_sum = get_matrix_squared_sum(matrix)
     result = BiclusteringResult(biclusters, len(matrix), len(matrix[0]), matrix_squared_sum, residuals)
+    print 'Residual portion: %.2f' % result.residuals_portion
+    print 'Total number of biclusters: %s' % len(result.biclusters)
     return result
 
 

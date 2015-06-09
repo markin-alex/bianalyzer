@@ -29,7 +29,6 @@ class AbstractBiclustering:  # Not for instantiation!
         self.matrix = matrix
         self.intermediate_biclusters = {}
         self.total_iterations = 0
-        self.saved_operations = 0
         if lambda0 > 0:
             self._decrease_overall_density(lambda0)
 
@@ -40,7 +39,7 @@ class AbstractBiclustering:  # Not for instantiation!
 
         for row_ind in range(len(self.matrix)):
             new_bicluster = self.find_bicluster(row_ind, initial_threshold)
-            if new_bicluster in biclusters or new_bicluster.density <= 0:
+            if new_bicluster is None or new_bicluster in biclusters or new_bicluster.density <= 0.0:
                 continue
             biclusters.add(new_bicluster)
 

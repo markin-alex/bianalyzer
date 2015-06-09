@@ -2,7 +2,11 @@
 
 from nodebox.graphics import *
 from nodebox.graphics.physics import Node, Edge, Graph
+from operator import itemgetter
+
+from ..errors import InvalidArgumentError
 from ..helpers import calculate_column_density, calculate_row_density
+from ..biclustering import KeywordBicluster
 
 
 class KeywordGraphGUI():
@@ -147,36 +151,38 @@ def draw_keyword_biclusters(edges):
     graph.start()
 
 
-def construct_keyword_graph(keyword_biclusters, bicluster_num=50):
+def construct_keyword_graph(keyword_biclusters, biclusters_num=0, min_density=0.0):
+    if not all(isinstance(b, KeywordBicluster) for b in keyword_biclusters):
+        raise InvalidArgumentError('keyword_biclusters', keyword_biclusters, 'All the elements of a keyword_biclusters '
+                                                                             'list should be of type KeywordBicluster')
+
     kw_edges = {}
-    keyword_biclusters = keyword_biclusters[:bicluster_num]
+    processed_biclusters = 0
     for keyword_bicluster in keyword_biclusters:
-        # if keyword_bicluster.g_value < 1.0:
-        #     break
-
-        # find dominating column
-        max_column = -1
-        max_col_density = -1000
-        for i, kw in enumerate(keyword_bicluster.keyword_columns):
-            col_density = calculate_column_density(i, keyword_bicluster.similarity_matrix)
-            if col_density > max_col_density:
-                max_col_density = col_density
-                max_column = kw
-
-        # find dominating row
-        max_row = -1
-        max_row_density = -1000
-        for i, kw in enumerate(keyword_bicluster.keyword_rows):
-            row_density = calculate_row_density(i, keyword_bicluster.similarity_matrix)
-            if row_density > max_row_density:
-                max_row_density = row_density
-                max_row = kw
-
-        if max_column == max_row:
-            print 'self-link for %s' % max_row  # TODO: note printing here and below
+        if keyword_bicluster.density < min_density:
             continue
 
-        print '%s -> %s' % (max_column, max_row)
+        # find the dominating column
+        columns_densities = []
+        for i, kw in enumerate(keyword_bicluster.keyword_columns):
+            columns_densities.append((i, calculate_column_density(i, keyword_bicluster.similarity_matrix)))
+        columns_densities.sort(key=itemgetter(1), reverse=True)
+        max_column = keyword_bicluster.keyword_columns[columns_densities[0][0]]
+        column_keywords = [keyword_bicluster.keyword_columns[i] for i, _ in columns_densities]
+
+        # find the dominating row
+        rows_densities = []
+        for i, kw in enumerate(keyword_bicluster.keyword_rows):
+            rows_densities.append((i, calculate_row_density(i, keyword_bicluster.similarity_matrix)))
+        rows_densities.sort(key=itemgetter(1), reverse=True)
+        max_row = keyword_bicluster.keyword_rows[rows_densities[0][0]]
+        row_keywords = [keyword_bicluster.keyword_rows[i] for i, _ in rows_densities]
+
+        if max_column == max_row:
+            # print 'self-link for %s' % max_row
+            continue
+
+        # print '%s -> %s' % (max_column, max_row)
         kw_edge = (max_column, max_row)
         if kw_edge in kw_edges:
             val = kw_edges[kw_edge]
@@ -184,11 +190,13 @@ def construct_keyword_graph(keyword_biclusters, bicluster_num=50):
             if prev_g_val >= keyword_bicluster.g_value:
                 kw_edges[kw_edge] = (val[0] + 1, val[1], val[2], prev_g_val)
             else:
-                kw_edges[kw_edge] = (val[0] + 1, keyword_bicluster.keyword_columns, keyword_bicluster.keyword_rows,
-                                     keyword_bicluster.g_value)
+                kw_edges[kw_edge] = (val[0] + 1, column_keywords, row_keywords, keyword_bicluster.g_value)
         else:
-            kw_edges[kw_edge] = (1, keyword_bicluster.keyword_columns, keyword_bicluster.keyword_rows,
-                                 keyword_bicluster.g_value)
+            kw_edges[kw_edge] = (1, column_keywords, row_keywords, keyword_bicluster.g_value)
+
+        processed_biclusters += 1
+        if biclusters_num > 0 and processed_biclusters >= biclusters_num:
+            break
 
     return kw_edges
 

@@ -17,10 +17,12 @@ class AbstractsTestCase(unittest.TestCase):
         for article in articles:
             self.assertEqual(isinstance(article.abstract_text, str), True)
 
-    @unittest.skipIf(springer_api_key is None or springer_api_key == '', 'User should specify the key')
+    @unittest.skipIf(springer_api_key is None or springer_api_key == '', 'A user should specify their key')
     def test_download_springer(self):
-        articles = download_abstracts('Springer', 'motion recognition', 100, springer_api_key)
-        self.assertGreater(len(articles), 0)
+        articles = download_abstracts('Springer', 'motion recognition', 300, springer_api_key)
+        for article in articles:
+            self.assertGreater(len(article.abstract_text), 50)
+        self.assertEqual(len(articles), 300)
         for article in articles:
             self.assertIsInstance(article.abstract_text, unicode or str)
 
