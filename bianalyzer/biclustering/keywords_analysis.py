@@ -59,9 +59,11 @@ def get_keyword_biclusters(similarity_matrix, biclustering_algorithm,
     return biclustering_result
 
 
-def save_keyword_biclusters(biclustering_result, file):
+def save_keyword_biclusters(biclustering_result, file, min_density=0.0):
     file.write('Residuals: %s\n\n' % biclustering_result.residuals_portion)
     for keyword_bicluster in biclustering_result.biclusters:
+        if keyword_bicluster.density <= min_density:
+            continue
         matrix = keyword_bicluster.similarity_matrix
         header = '%30s' % ''
         header += ''.join('%30s' % k for k in keyword_bicluster.keyword_columns)

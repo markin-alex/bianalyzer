@@ -151,14 +151,13 @@ def draw_keyword_biclusters(edges):
     graph.start()
 
 
-def construct_keyword_graph(keyword_biclusters, bicluster_num=0, min_density=0.0):
+def construct_keyword_graph(keyword_biclusters, biclusters_num=0, min_density=0.0):
     if not all(isinstance(b, KeywordBicluster) for b in keyword_biclusters):
         raise InvalidArgumentError('keyword_biclusters', keyword_biclusters, 'All the elements of a keyword_biclusters '
                                                                              'list should be of type KeywordBicluster')
 
     kw_edges = {}
-    if bicluster_num > 0:
-        keyword_biclusters = keyword_biclusters[:bicluster_num]
+    processed_biclusters = 0
     for keyword_bicluster in keyword_biclusters:
         if keyword_bicluster.density < min_density:
             continue
@@ -194,6 +193,10 @@ def construct_keyword_graph(keyword_biclusters, bicluster_num=0, min_density=0.0
                 kw_edges[kw_edge] = (val[0] + 1, column_keywords, row_keywords, keyword_bicluster.g_value)
         else:
             kw_edges[kw_edge] = (1, column_keywords, row_keywords, keyword_bicluster.g_value)
+
+        processed_biclusters += 1
+        if biclusters_num > 0 and processed_biclusters >= biclusters_num:
+            break
 
     return kw_edges
 
