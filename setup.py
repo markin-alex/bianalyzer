@@ -23,7 +23,7 @@ def post_install():
 setuptools.setup(
     name='Bianalyzer',
     url='https://github.com/luntos/bianalyzer',
-    version='0.1',
+    version='1.0',
     description='Bicluster analysis library oriented towards work with unstructured text data and keyphrases',
 
     packages=setuptools.find_packages(),
