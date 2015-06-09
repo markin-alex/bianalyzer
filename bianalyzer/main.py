@@ -93,7 +93,7 @@ def main():
             if opts['-d']:
                 try:
                     from bianalyzer.graphs import construct_keyword_graph, draw_keyword_biclusters
-                    edges = construct_keyword_graph(keyword_biclusters.biclusters)
+                    edges = construct_keyword_graph(keyword_biclusters.biclusters, biclusters_num=100)
                     draw_keyword_biclusters(edges)
                 except Exception:
                     print '-------------------------'
